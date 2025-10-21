@@ -1,1 +1,0 @@
-// script.js placeholder for media preview, hashtags, corrected captions, viral score, social media selection, premium flow
