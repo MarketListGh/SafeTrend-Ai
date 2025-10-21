@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeTrend Ai</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * {margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif;}
+  body {color: #fff; overflow-x: hidden;}
+
+  body.home {background: linear-gradient(135deg, #0ff, #8a2be2);}
+
+  nav {display: flex; justify-content: space-between; align-items: center; padding: 20px;}
+  nav .logo {display: flex; align-items: center; font-weight: bold; font-size: 28px;}
+  nav .logo img {width: 60px; height: 60px; margin-right: 10px;}
+  nav a {color: #fff; text-decoration: none; margin-left: 20px; font-size: 20px;}
+
+  .container {max-width: 900px; margin: 50px auto; padding: 30px; background: rgba(0,0,0,0.5); border-radius: 20px;}
+  .btn {padding: 14px 30px; font-size: 20px; border: none; border-radius: 12px; cursor: pointer; margin-top: 10px;}
+  .btn-primary {background: #0ff; color: #000;}
+
+  .media-preview {margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 12px; text-align: center; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; overflow: hidden;}
+  .media-preview img, .media-preview video {max-width: 100%; max-height: 100%; border-radius: 12px; display: block;}
+
+  .socials {display: flex; gap: 15px; margin-top: 25px;}
+  .social {padding: 18px; background: rgba(255,255,255,0.2); border-radius: 12px; flex: 1; text-align: center; cursor: pointer; transition: 0.3s; font-size: 18px;}
+  .social:hover, .social.active {background: #0ff; color: #000;}
+
+  input, select, textarea {width: 100%; padding: 14px; margin: 12px 0; border-radius: 12px; border: none; font-size: 18px;}
+  .keywords, .corrected-captions, .hashtags {margin-top: 20px; font-size: 18px; background: rgba(0,255,255,0.1); padding: 15px; border-radius: 12px;}
+  .viral-bubble {margin-top: 20px; background: #ff0; color: #000; padding: 15px 25px; border-radius: 50px; font-weight: bold; font-size: 18px; text-align: center; display: inline-block; box-shadow: 0 0 20px rgba(255,255,0,0.6);}
+
+  .animate-score {transition: all 1.5s ease-in-out; transform: scale(1.2);}
+
+  @media(max-width: 600px){.socials{flex-direction: column;}}
+</style>
+</head>
+<body class="home">
+
+<nav>
+  <div class="logo">
+    <img src="logo.png" alt="SafeTrend Ai Logo">
+    SafeTrend Ai
+  </div>
+  <div class="nav-links">
+    <a href="#">Home</a>
+    <a href="#">Features</a>
+    <a href="#">Pricing</a>
+    <a href="#">Login</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>SafeTrend Ai</h1>
+  <p>Upload your image or video and get trending keywords!</p>
+  <input type="file" id="media" accept="image/*,video/*">
+
+  <div class="media-preview" id="mediaPreview">Preview your upload here</div>
+
+  <textarea id="caption" placeholder="Enter your caption here"></textarea>
+  <div class="corrected-captions" id="correctedCaptions">Corrected Captions will appear here if needed...</div>
+  <div class="hashtags" id="hashtags">Generated Hashtags will appear here...</div>
+
+  <div class="socials">
+    <div class="social active">Facebook</div>
+    <div class="social">WhatsApp</div>
+    <div class="social">Instagram</div>
+    <div class="social">TikTok</div>
+    <div class="social">Twitter/X</div>
+  </div>
+
+  <button class="btn btn-primary" id="generateKeywords">Generate Keywords</button>
+  <div class="keywords" id="keywords">Your keywords will appear here...</div>
+  <div class="viral-bubble" id="viralScore">Viral Score: --</div>
+</div>
+
+<script>
+const mediaInput = document.getElementById('media');
+const mediaPreview = document.getElementById('mediaPreview');
+const correctedDiv = document.getElementById('correctedCaptions');
+const hashtagsDiv = document.getElementById('hashtags');
+const viralScoreDiv = document.getElementById('viralScore');
+let mainKeywords = [];
+let viralScore = 0;
+
+mediaInput.addEventListener('change', (e) => {
+  mediaPreview.innerHTML = 'Preview your upload here';
+  const file = e.target.files[0];
+  if(file){
+    const url = URL.createObjectURL(file);
+    if(file.type.startsWith('image')){
+      const img = document.createElement('img');
+      img.src = url;
+      mediaPreview.innerHTML = '';
+      mediaPreview.appendChild(img);
+    } else if(file.type.startsWith('video')){
+      const video = document.createElement('video');
+      video.src = url;
+      video.controls = true;
+      mediaPreview.innerHTML = '';
+      mediaPreview.appendChild(video);
+    }
+  }
+  mainKeywords = [];
+  correctedDiv.textContent = 'Corrected Captions will appear here if needed...';
+  hashtagsDiv.textContent = 'Generated Hashtags will appear here...';
+  viralScoreDiv.textContent = 'Viral Score: --';
+});
+
+const socials = document.querySelectorAll('.social');
+socials.forEach(social => {
+  social.addEventListener('click', () => {
+    socials.forEach(s => s.classList.remove('active'));
+    social.classList.add('active');
+  });
+});
+
+const generateBtn = document.getElementById('generateKeywords');
+const keywordsDiv = document.getElementById('keywords');
+
+generateBtn.addEventListener('click', () => {
+  const caption = document.getElementById('caption').value.trim();
+  if(!caption && mediaInput.files.length === 0){
+    alert('Please upload an image/video or enter a caption before generating.');
+    return;
+  }
+
+  const mediaName = mediaInput.files[0] ? mediaInput.files[0].name.split('.')[0] : '';
+  mainKeywords = [];
+  const base = caption || mediaName;
+  mainKeywords.push(base.replace(/kill|danger|offensive/gi, 'amazing'));
+  mainKeywords.push(base + '_viral');
+  mainKeywords.push('Top_' + base);
+
+  keywordsDiv.textContent = 'Suggested Trend Names: ' + mainKeywords.join(', ');
+
+  const riskyWords = /kill|danger|offensive/gi;
+  if(riskyWords.test(caption)){
+    correctedDiv.innerHTML = 'Corrected Captions:<br>' + 
+      caption.replace(riskyWords, 'amazing') + '<br>' +
+      caption.replace(riskyWords, 'exciting') + '<br>' +
+      caption.replace(riskyWords, 'incredible');
+  } else {
+    correctedDiv.textContent = 'No correction needed.';
+  }
+
+  hashtagsDiv.textContent = '#' + mainKeywords.join(' #');
+
+  if(viralScore === 0){
+    viralScore = Math.floor(Math.random() * 950000) + 50000;
+  }
+  viralScoreDiv.textContent = `Viral Score: ${viralScore.toLocaleString
